@@ -4,6 +4,14 @@ import { messages } from '@/lib/db/schema';
 
 export async function POST(request: Request) {
   try {
+    // 检查数据库是否已连接
+    if (!db) {
+      return NextResponse.json(
+        { error: '数据库未连接' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { name, email, phone, message } = body;
 
