@@ -1,39 +1,52 @@
+'use client';
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface MenuItem {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+}
+
+interface MenuData {
+  [category: string]: MenuItem[];
+}
 
 export default function MenuPage() {
-  const menuItems = [
-    {
-      category: "咖啡类",
-      items: [
-        { name: "美式咖啡", description: "经典黑咖啡，浓郁香醇", price: "￥28" },
-        { name: "拿铁咖啡", description: "丝滑牛奶与浓缩咖啡的完美结合", price: "￥35" },
-        { name: "卡布奇诺", description: "经典意式咖啡，奶泡丰富", price: "￥32" },
-        { name: "摩卡咖啡", description: "巧克力与咖啡的浪漫邂逅", price: "￥38" },
-        { name: "焦糖玛奇朵", description: "甜蜜焦糖与咖啡的层次感", price: "￥40" },
-        { name: "意式浓缩", description: "浓郁纯粹的意式经典", price: "￥25" },
-      ]
-    },
-    {
-      category: "非咖啡类",
-      items: [
-        { name: "经典红茶", description: "醇厚甘甜的经典红茶", price: "￥22" },
-        { name: "柠檬蜂蜜茶", description: "清新柠檬与甜蜜蜂蜜的完美搭配", price: "￥25" },
-        { name: "水果茶", description: "新鲜水果调制的水果茶", price: "￥28" },
-        { name: "热巧克力", description: "浓郁丝滑的热巧克力", price: "￥30" },
-      ]
-    },
-    {
-      category: "甜点小食",
-      items: [
-        { name: "提拉米苏", description: "经典意式甜点", price: "￥32" },
-        { name: "蓝莓芝士蛋糕", description: "浓郁芝士配新鲜蓝莓", price: "￥35" },
-        { name: "巧克力布朗尼", description: "浓郁巧克力布朗尼", price: "￥28" },
-        { name: "牛角包", description: "酥脆香甜的牛角包", price: "￥18" },
-        { name: "马卡龙", description: "法式精致小点", price: "￥25" },
-        { name: "司康饼", description: "英式经典下午茶", price: "￥22" },
-      ]
+  const [menuData, setMenuData] = useState<MenuData>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMenu();
+  }, []);
+
+  const fetchMenu = async () => {
+    try {
+      const response = await fetch('/api/menu');
+      if (response.ok) {
+        const data = await response.json();
+        setMenuData(data);
+      }
+    } catch (error) {
+      console.error('获取菜单失败:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-amber-50 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">☕</div>
+          <p className="text-xl text-amber-900">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-amber-50 pt-16">
@@ -74,20 +87,20 @@ export default function MenuPage() {
 
       {/* Menu Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {menuItems.map((category, categoryIndex) => (
-          <div key={categoryIndex} className="mb-16">
+        {Object.entries(menuData).map(([category, items]) => (
+          <div key={category} className="mb-16">
             <h2 className="text-3xl font-bold text-amber-900 mb-8 border-b-2 border-amber-300 pb-2">
-              {category.category}
+              {category}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {category.items.map((item, itemIndex) => (
+              {items.map((item) => (
                 <div
-                  key={itemIndex}
+                  key={item.id}
                   className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold text-amber-900">{item.name}</h3>
-                    <span className="text-lg font-bold text-amber-800">{item.price}</span>
+                    <span className="text-lg font-bold text-amber-800">￥{item.price}</span>
                   </div>
                   <p className="text-amber-700">{item.description}</p>
                 </div>

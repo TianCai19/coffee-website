@@ -1,6 +1,52 @@
+'use client';
+
 import Link from "next/link";
+import { useState } from "react";
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-amber-50 pt-16">
       {/* Navigation */}
@@ -121,14 +167,28 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div>
             <h2 className="text-3xl font-bold text-amber-900 mb-8">留言给 我们</h2>
-            <form className="bg-white rounded-lg shadow-md p-8">
+            {submitStatus === 'success' && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                留言提交成功，我们会尽快回复您！
+              </div>
+            )}
+            {submitStatus === 'error' && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                提交失败，请稍后重试
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8">
               <div className="mb-6">
                 <label htmlFor="name" className="block text-amber-900 font-semibold mb-2">
-                  姓名
+                  姓名 *
                 </label>
                 <input
                   type="text"
                   id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
                   className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                   placeholder="请输入您的姓名"
                 />
@@ -136,11 +196,15 @@ export default function ContactPage() {
 
               <div className="mb-6">
                 <label htmlFor="email" className="block text-amber-900 font-semibold mb-2">
-                  邮箱
+                  邮箱 *
                 </label>
                 <input
                   type="email"
                   id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
                   className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                   placeholder="请输入您的邮箱"
                 />
@@ -153,6 +217,9 @@ export default function ContactPage() {
                 <input
                   type="tel"
                   id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
                   className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                   placeholder="请输入您的电话"
                 />
@@ -160,10 +227,14 @@ export default function ContactPage() {
 
               <div className="mb-6">
                 <label htmlFor="message" className="block text-amber-900 font-semibold mb-2">
-                  留言内容
+                  留言内容 *
                 </label>
                 <textarea
                   id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
                   rows={5}
                   className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                   placeholder="请输入您的留言内容"
@@ -172,9 +243,10 @@ export default function ContactPage() {
 
               <button
                 type="submit"
-                className="w-full bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition"
+                disabled={submitting}
+                className="w-full bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition disabled:opacity-50"
               >
-                发送留言
+                {submitting ? '提交中...' : '发送留言'}
               </button>
             </form>
           </div>
